@@ -169,6 +169,9 @@ sql_mode=STRICT_ALL_TABLES
 
 ==========================================================================
 
+copy key file local to cm
+change parmmision 600
+
 -----*** Make mysql start on boot ***----
 
 sudo update-rc.d mysql defaults
@@ -269,6 +272,28 @@ $ sudo mkdir -p /var/www/html/cloudera-repos/cm6
 
 $ wget tarball
 
+Copy file s3 To CM Using AWS Cli
+$ sudo apt-get install awscli
+
+#Access IAM S3 Rule
+
+$ aws s3 ls <bucket name>
+#cp Object from S3 on CM
+
+#copy first file
+$ aws s3 cp s3://clouderafile/CDH-6.3.3-1.cdh6.3.3.p0.1796617-xenial.parcel.sha ~
+
+#copy Second file
+$ aws s3 cp s3://clouderafile/CDH-6.3.3-1.cdh6.3.3.p0.1796617-xenial.parcel ~
+
+#copy third file
+$ aws s3 cp s3://clouderafile/cm6.3.3-ubuntu1604.tar.gz ~
+
+#copy fourth file
+$ aws s3 cp s3://clouderafile/manifest.json ~
+
+
+
 $ sudo tar xvfz cm6.3.3-ubuntu1604.tar.gz -C /var/www/html/cloudera-repos/cm6 --strip-components=1
 
 $ sudo chmod -R ugo+rX /var/www/html/cloudera-repos/cm6
@@ -305,6 +330,8 @@ mysql> exit;
 
 sudo /opt/cloudera/cm/schema/scm_prepare_database.sh -p mysql cmdb cm password
 
+
+
 ##### Start the Cloudera Manager Server #####
 
 $ sudo service cloudera-scm-server start
@@ -317,6 +344,9 @@ $ sudo service cloudera-scm-agent status
 ##### Setup custom CDH repository #####
 
 >> Dowload parcel,sha and manifest file and move them to Local parcel repository
+$ sudo mv CDH-6.3.3-1.cdh6.3.3.p0.1796617-xenial.parcel /opt/cloudera/parcel-repo/
+$ sudo mv CDH-6.3.3-1.cdh6.3.3.p0.1796617-xenial.parcel.sha /opt/cloudera/parcel-repo/
+$ sudo mv manifest.json /opt/cloudera/parcel-repo/
 
 $ cd /opt/cloudera/parcel-repo/
 
@@ -346,23 +376,23 @@ mysql -u root -p
 >> For reports manager
 
 mysql> create database rman DEFAULT CHARACTER SET utf8;
-mysql> CREATE USER 'rman'@'ip-10-0-1-65.ec2.internal' IDENTIFIED BY 'password';
+mysql> CREATE USER 'rman'@'ip-10-0-1-98.ec2.internal' IDENTIFIED BY 'password';
 (Note : Enter pri-dns of host where the particular service is running)
-mysql> grant all on rman.* TO 'rman'@'ip-10-0-1-65.ec2.internal' IDENTIFIED BY 'password';
+mysql> grant all on rman.* TO 'rman'@'ip-10-0-1-98.ec2.internal' IDENTIFIED BY 'password';
 
 
 >> For Hive
 
 mysql> create database metastore DEFAULT CHARACTER SET utf8;
-mysql> CREATE USER 'hive'@'ip-10-0-1-182.ec2.internal' IDENTIFIED BY 'password';
-mysql> grant all on metastore.* TO 'hive'@'ip-10-0-1-182.ec2.internal' IDENTIFIED BY 'password';
+mysql> CREATE USER 'hive'@'ip-10-0-1-42.ec2.internal' IDENTIFIED BY 'password';
+mysql> grant all on metastore.* TO 'hive'@'ip-10-0-1-42.ec2.internal' IDENTIFIED BY 'password';
 
 
 >> For Oozie
 
 mysql> create database oozie default character set utf8;
-mysql> CREATE USER 'oozie'@'ip-10-0-1-182.ec2.internal' IDENTIFIED BY 'password';
-mysql> grant all privileges on oozie.* to 'oozie'@'ip-10-0-1-182.ec2.internal' identified by 'password';
+mysql> CREATE USER 'oozie'@'ip-10-0-1-42.ec2.internal' IDENTIFIED BY 'password';
+mysql> grant all privileges on oozie.* to 'oozie'@'ip-10-0-1-42.ec2.internal' identified by 'password';
 
 == Add mysql driver jar
 
@@ -372,15 +402,15 @@ sudo cp /usr/share/java/mysql-connector-java-5.1.38.jar /opt/cloudera/parcels/CD
 mysql -u root -p
 
 mysql> create database hue default character set utf8 default collate utf8_general_ci;
-mysql> CREATE USER 'hue'@'ip-10-0-0-100.ec2.internal' IDENTIFIED BY 'password';
-mysql> grant all on hue.* to 'hue'@'ip-10-0-0-100.ec2.internal' identified by 'password';
+mysql> CREATE USER 'hue'@'ip-10-0-0-43.ec2.internal' IDENTIFIED BY 'password';
+mysql> grant all on hue.* to 'hue'@'ip-10-0-0-43.ec2.internal' identified by 'password';
 
 
 ##### Install Mysql jdbc jar on hosts where services are running #####
 
-sudo apt-get install libmysql-java
+sudo apt-get install libmysql-java  (for hue,ozzie,hsm,report manager)
 
-sudo cp /usr/share/java/mysql-connector-java-5.1.28.jar /opt/cloudera/parcels/CDH/lib/oozie/lib/
+sudo cp /usr/share/java/mysql-connector-java-5.1.28.jar /opt/cloudera/parcels/CDH/lib/oozie/lib/  (for ozzie)
 
 
 ##### On database host
@@ -392,10 +422,12 @@ cd /etc/mysql//mysql.conf.d/
 sudo nano mysqld.cnf
 
 bind-address=(private-ip-of-cms)
+restart mysql 
 
 ## Now continue installation on CM web ui
 
 
+#pest cm (mysql) host name on all service
 
 -----*** Set up Edge node ***-----
 
