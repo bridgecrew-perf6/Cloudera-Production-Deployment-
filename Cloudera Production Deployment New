@@ -437,7 +437,7 @@ Add gateway roles on CM node
 test whether read and write is working
 
 ## Run a test job
-
+# connect edge Node
 yarn jar /opt/cloudera/parcels/CDH/lib/hadoop-mapreduce/hadoop-mapreduce-examples.jar pi 10 100 
 
 ## Set up Jumper node to access webui of daemons
